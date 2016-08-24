@@ -82,8 +82,11 @@ void fpm_scoreboard_update(int idle, int active, int lq, int lq_len, int request
 		return;
 	}
 
+  /* When FPM_SCOREBOARD_ACTION_SET is passed it is expected that the
+   * the caller has created the lock.  This avoids the case where
+   * fpm_pctl_perform_idle_server_maintenance was clobber idle status
+   */
 
-	fpm_spinlock(&scoreboard->lock, 0);
 	if (action == FPM_SCOREBOARD_ACTION_SET) {
 		if (idle >= 0) {
 			scoreboard->idle = idle;
@@ -113,6 +116,7 @@ void fpm_scoreboard_update(int idle, int active, int lq, int lq_len, int request
 			scoreboard->slow_rq = slow_rq;
 		}
 	} else {
+	  fpm_spinlock(&scoreboard->lock, 0);
 		if (scoreboard->idle + idle > 0) {
 			scoreboard->idle += idle;
 		} else {

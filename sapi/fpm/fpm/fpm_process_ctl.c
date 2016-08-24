@@ -321,6 +321,11 @@ static void fpm_pctl_perform_idle_server_maintenance(struct timeval *now) /* {{{
 
 		if (wp->config == NULL) continue;
 
+    /* Create the lock before we examine the idle children so we do not
+     * overwrite changes that happen to idle between here and when
+     * we call fpm_scoreboard_update with FPM_SCOREBOARD_ACTION_SET */    
+    fpm_spinlock(&wp->scoreboard->lock, 0);
+
 		for (child = wp->children; child; child = child->next) {
 			if (fpm_request_is_idle(child)) {
 				if (last_idle_child == NULL) {
